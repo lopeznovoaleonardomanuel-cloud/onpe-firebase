@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+const firebaseConfig = {
+   apiKey: "AIzaSyC2nS2aKxcA8re30oxVdIA_W8Ci7y8tn0I",
+   authDomain: "onpe-firebase-d401b.firebaseapp.com",
+   projectId: "onpe-firebase-d401b",
+   storageBucket: "onpe-firebase-d401b.firebasestorage.app",
+   messagingSenderId: "735938188147",
+   appId: "1:735938188147:web:9c6b69cb1fffdad62deb06"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const setParticipacion = async (id) => {
+            const data_departamentos = await fetch(`http://localhost/onpe_sweb_php/participacion/${id}`)
+            const departamentos = await data_departamentos.json()
+            departamentos.data.forEach(async departamento =>{
+                departamento.ID = id
+                addDoc(collection(db, 'participacion_departamento'), departamento)
+
+                const data_provincia = await fetch(`http://localhost/onpe_sweb_php/participacion/${id}/${departamento.DPD}`)
+                const provincias = await data_provincia.json()
+                provincias.data.forEach(async provincia => {
+                    provincia.ID = id
+                    provincia.Departamento = departamento.DPD
+                    addDoc(collection(db, "participacion_provincia"), provincia)
+
+                    const data_distrito = await fetch(`http://localhost/onpe_sweb_php/participacion/${id}/${departamento.DPD}/${provincia.DPD}`)
+                    const distritos = await data_distrito.json()
+                    distritos.data.forEach(distrito =>{
+                        distrito.ID = id
+                        distrito.Departamento = departamento.DPD
+                        distrito.Provincia = provincia.DPD
+                        addDoc(collection(db, "participacion_distrito"), distrito)
+                    })
+                })
+            })
+        }
+
+        const setUbigeos = async (id) => {
+            const data_ubigeos = await fetch(`http://localhost/onpe_sweb_php/${id}`)
+            const ubigeos = await data_ubigeos.json()
+            ubigeos.data.forEach(ubigeo => {
+                if(id == "departamento" && ubigeo.idDepartamento < 26) ubigeo.idAmbito = "1"
+                if(id == "departamento" && ubigeo.idDepartamento > 25) ubigeo.idAmbito = "2"
+                addDoc(collection(db, `${id}`), ubigeo)
+            })
+        }
+
+        const setActas = async(id) => {
+            const data_actas = await fetch(`http://localhost/onpe_sweb_php/${id}`)
+            const actas = await data_actas.json()
+            actas.data.forEach(acta => {
+                addDoc(collection(db, "actas"), acta)
+            })
+        }
+
+        //setParticipacion("Nacional")
+        //setParticipacion("Extranjero")
+        //setUbigeos("departamento")
+        //setUbigeos("provincia")
+        //setUbigeos("distrito")
+        //setUbigeos("localvotacion")
+        //setUbigeos("grupovotacion")
+        //setActas("grupovotacion")
+    </script>
+</body>
+</html>
+
